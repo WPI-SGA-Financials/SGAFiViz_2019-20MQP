@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/story/sankey/sankey.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/story/sankey/sankey.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import * as d3 from 'd3'
+import mySankey from "./d3.sankey.js";
+
+/**
+ * D3 code for creating the ridgechart
+ *
+ * @component
+ * @prop {int} particle_speed speed of moving particles (normally between 0 and 2)
+ * @example
+ * return (
+ *    &lt;Sankey particle_speed={0.8}/>
+ * )
+ */
+class Sankey extends Component {
+
+    constructor(props) {
+      super(props);
+      this.state = {
+        // counting up values on proper position
+        height: 0, 
+        width: 0,
+      }
+      this.chartRef = React.createRef();
+    }
+  
+    componentDidMount() {
+      let width = this.getWidth();
+      //let height = this.getHeight();
+  
+      this.setState({width: width-60, height: 700});
+      this.drawChart();
+  
+      let resizedFn;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizedFn);
+        resizedFn = setTimeout(() => {
+            this.redrawChart();
+        }, 200)
+      });
+    }
+
+    async redrawChart() {
+      // save past dimensions
+      let width = this.state.width + 60
+      let height = this.state.height + 60
+      try {
+        width = this.getWidth();
+        height = this.getHeight();
+      }
+      catch(error) {
+       return
+      }
+      this.setState({width: width-60, height: height-60});
+      this.drawChart = this.drawChart.bind(this);
+      this.drawChart();
+    }
+      
+  
+    componentWillUnmount() {
+      this._isMounted = false;
+    }
+  
+    drawChart() {
+     
+      /* Grab data and do some KFT sankey stuff */
+      fetch('/api/sankey_data')
+        .then(response => response.json())
+        .then(data => {
+
+          d3.select("#sankeyCanvas").remove();
+          d3.select("#sankeySVG").remove();
+  
+          /* Setup D3 Environment */
+  
+          // var margin = {top: 1, right: 1, bottom: 6, left: 1},
+          //     width = 1000 - margin.left - margin.right,
+          //     height = 700 - margin.top - margin.bottom;
+  
+          var margin = {top: 1, right: 1, bottom: 20, left: 1},
+              width = this.state.width - margin.left - margin.right,
+              height = this.state.height - margin.top - margin.bottom;
+  
+          var formatNumber = d3.format(",.0f"),
+              format = function(d) { return '$' + formatNumber(d); },
+              color = d3.scaleOrdinal(d3.schemeCategory10);
+  
+          var canvas = d3.select("#sankey").append("canvas")  
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("id", "sankeyCanvas")
+            .attr("class", "canvas");
+  
+          var svg = d3.select("#sankey").append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+              .attr("id", "sankeySVG")
+              .attr("class", "svg")
+            .append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          mySankey
+            .nodeWidth(15)
+            .nodePadding(10)
+            .size([width, height]);
+  
+          var path = mySankey.link(); 
+          
+          mySankey
+            .nodes(data.nodes)
+            .links(data.links)
+            .layout(32);
+          
+          var link = svg.append("g").selectAll(".link")
+              .data(data.links)
+              .enter().append("path")
+              .attr("class", "link")
+              .attr("d", path)
+              .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+              .sort(function(a, b) { return b.dy - a.dy; });
+  
+          link.append("title")
+              .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+  
+          var node = svg.append("g").selectAll(".node")
+              .data(data.nodes)
+              .enter().append("g")
+              .attr("class", "node")
+              .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+              .call(d3.drag()
+                  .subject(function(d) { return d; })
+                  .on("start", function() { this.parentNode.appendChild(this); })
+                  .on("drag", dragmove));
+  
+          node.append("rect")
+              .attr("height", function(d) { return d.dy; })
+              .attr("width", mySankey.nodeWidth())
+              .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
+              .style("stroke", "none")
+              .append("title")
+              .text(function(d) { return d.name + "\n" + format(d.value); });
+  
+          node.append("text")
+              .attr("x", -6)
+              .attr("y", function(d) { return d.dy / 2; })
+              .attr("dy", ".35em")
+              .attr("text-anchor", "end")
+              .attr("transform", null)
+              .text(function(d) { return d.name; })
+              .filter(function(d) { return d.x &lt; width / 2; })
+              .attr("x", 6 + mySankey.nodeWidth())
+              .attr("text-anchor", "start");
+  
+          function dragmove(d) {
+              d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
+              mySankey.relayout();
+              link.attr("d", path);
+          }
+  
+          var linkExtent = d3.extent(data.links, function (d) {return d.value});
+          var frequencyScale = d3.scaleLinear().domain(linkExtent).range([0.05,1]);
+          // var particleSize = d3.scaleLinear().domain(linkExtent).range([1,5]);
+  
+  
+          data.links.forEach(function (link) {
+              link.freq = frequencyScale(link.value);
+              link.particleSize = 3;
+              link.particleColor = d3.scaleLinear().domain([0,1])
+                  .range([link.source.color, link.target.color]);
+          })
+  
+          d3.timer(tick, 1000);
+          var particles = [],
+              speed = this.props.particle_speed;
+  
+          function tick(elapsed, time) {
+  
+              particles = particles.filter(function (d) {return d.current &lt; d.path.getTotalLength()});
+  
+              d3.selectAll("path.link")
+                  .each(
+                      function (d) {
+                          for (var x = 0;x&lt;2;x++) {
+                              var offset = (Math.random() - .5) * (d.dy - 4);
+                              if (Math.random() &lt; d.freq) {
+                                  var length = this.getTotalLength();
+                                  particles.push({link: d, time: elapsed, offset: offset, path: this, length: length, animateTime: length, speed: speed + (Math.random())})
+                              }
+                          }
+                      });
+  
+              particleEdgeCanvasPath(elapsed);
+          }
+  
+          function particleEdgeCanvasPath(elapsed) {
+              
+             try {
+
+                var context = canvas.node().getContext("2d")
+  
+                // this prevents moving particle buildup
+                context.clearRect(0, 0, width, height);
+  
+                context.fillStyle = "gray";
+                context.lineWidth = "1px";
+                for (var x in particles) {
+                    var currentTime = elapsed - particles[x].time;
+                    particles[x].current = currentTime * 0.15 * particles[x].speed;
+                    var currentPos = particles[x].path.getPointAtLength(particles[x].current);
+                    context.beginPath();
+                    context.fillStyle = particles[x].link.particleColor(0);
+                    context.arc(currentPos.x, currentPos.y + particles[x].offset, particles[x].link.particleSize, 0, 2 * Math.PI);
+                    context.fill();
+                }
+  
+             } catch(error) {
+               console.log(error)
+             } 
+              
+          }
+  
+        })
+        .catch(err => {
+          console.log(err)
+        })
+  
+    }
+  
+    getWidth(){
+      return this.chartRef.current.parentElement.offsetWidth;
+    }
+    getHeight(){
+        return this.chartRef.current.parentElement.offsetHeight;
+    }
+  
+    render() {
+          return (
+              &lt;div ref={this.chartRef} id="sankey" className = "has-text-centered">
+              &lt;/div>
+        );  
+    }
+  }
+
+  export default Sankey;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AboutPage.html">AboutPage</a></li><li><a href="App.html">App</a></li><li><a href="BarChart.html">BarChart</a></li><li><a href="BudgetPage.html">BudgetPage</a></li><li><a href="ComponentSwitcher.html">ComponentSwitcher</a></li><li><a href="ExampleSelectChart.html">ExampleSelectChart</a></li><li><a href="Footer.html">Footer</a></li><li><a href="Header.html">Header</a></li><li><a href="LollipopSelect.html">LollipopSelect</a></li><li><a href="RawDataTable.html">RawDataTable</a></li><li><a href="RidgeChart.html">RidgeChart</a></li><li><a href="Sankey.html">Sankey</a></li><li><a href="ScatterPlot.html">ScatterPlot</a></li><li><a href="Select.html">Select</a></li><li><a href="SLFLineChart.html">SLFLineChart</a></li><li><a href="Story.html">Story</a></li><li><a href="SunburstChart.html">SunburstChart</a></li><li><a href="TotalLineChart.html">TotalLineChart</a></li></ul><h3>Global</h3><ul><li><a href="global.html#draw">draw</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Thu Sep 03 2020 15:08:45 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

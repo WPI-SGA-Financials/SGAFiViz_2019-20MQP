@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/multi-select/RawDataTable.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/multi-select/RawDataTable.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import 'react-tabulator/lib/styles.css'; // required styles
+import 'react-tabulator/lib/css/tabulator.min.css'; // theme
+import { ReactTabulator } from 'react-tabulator'; // for React 15.x, use import { React15Tabulator }
+
+/**
+ * Component for showing a Raw Data Table using Tabulator. Will require a display name if it is part of a multi select.
+ *
+ *
+ * @component
+ * @example
+ * 
+ * return (
+ *   &lt;RawDataTable/>
+ * )
+ * 
+ * @example multi-select
+ * 
+ * return (
+ *   &lt;RawDataTable displayName={"DataTable"}/>
+ * )
+ */
+class RawDataTable extends Component {
+    constructor(props) {
+      super(props);     
+      this.state = {
+        selected: [],
+        columns : [
+            {title: 'Name', field: 'name'},
+            {title: 'Category', field: 'category'},
+            {title: 'Budget', field: 'budget', formatter:"money", bottomCalc:"sum", bottomCalcFormatter: "money",
+              bottomCalcFormatterParams:  {
+                decimal: ".",
+                thousand: ",",
+                symbol: "$"
+              }, formatterParams: {
+                decimal: ".",
+                thousand: ",",
+                symbol: "$"
+            }},
+            {title: 'Budget out of the student life fee', field: 'budget_for_slf', formatter:"money", bottomCalc:"sum", bottomCalcFormatter: "money",
+            bottomCalcFormatterParams:  {
+              decimal: ".",
+              thousand: ",",
+              symbol: "$"
+            }, formatterParams: {
+              decimal: ".",
+              thousand: ",",
+              symbol: "$"
+          }},
+            {title: 'Members', field: 'active_members', bottomCalc:"sum"}
+        ],
+        tableOptions: {
+          pagination: 'local', 
+          paginationSize: '20',
+          responsiveLayout:"hide",  //hide columns that dont fit on the table
+          tooltips:true,            //show tool tips on cells
+          movableColumns:true,      //allow column order to be changed
+          resizableRows:true,       //allow row order to be changed
+          initialSort:[             //set the initial sort order of the data
+            {column:"name", dir:"asc"},
+          ],
+        },
+        table_size: 0,
+      };
+    }
+  
+    componentDidMount() { 
+      this.setState(function (state, props) {
+        return {
+          selected: props.selected,
+          table_size: props.selected.length,
+        };
+      });
+      
+    }
+
+    componentDidUpdate(prevProps, prevState) {    
+    }
+
+    static getDerivedStateFromProps(props, current_state) {
+      if (current_state.selected !== props.selected) {
+        return {
+          selected: props.selected,
+        };
+      }
+      return null;
+    }
+
+    render() {
+      if (this.state.selected.length > 0) {
+        return (
+          &lt;div>
+            &lt;ReactTabulator 
+                columns={this.state.columns} 
+                data={this.state.selected}
+                options={this.state.tableOptions}
+              />
+          &lt;/div>
+        );
+      }
+      return (
+        &lt;div>    
+          &lt;ReactTabulator 
+              columns={this.state.columns} 
+              data={this.props.allOptions}
+              options={this.state.tableOptions}
+            />
+        &lt;/div>
+      );
+    }
+  }
+  
+  export default RawDataTable;
+  
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AboutPage.html">AboutPage</a></li><li><a href="App.html">App</a></li><li><a href="BarChart.html">BarChart</a></li><li><a href="BudgetPage.html">BudgetPage</a></li><li><a href="ComponentSwitcher.html">ComponentSwitcher</a></li><li><a href="ExampleSelectChart.html">ExampleSelectChart</a></li><li><a href="Footer.html">Footer</a></li><li><a href="Header.html">Header</a></li><li><a href="LollipopSelect.html">LollipopSelect</a></li><li><a href="RawDataTable.html">RawDataTable</a></li><li><a href="RidgeChart.html">RidgeChart</a></li><li><a href="Sankey.html">Sankey</a></li><li><a href="ScatterPlot.html">ScatterPlot</a></li><li><a href="Select.html">Select</a></li><li><a href="SLFLineChart.html">SLFLineChart</a></li><li><a href="Story.html">Story</a></li><li><a href="SunburstChart.html">SunburstChart</a></li><li><a href="TotalLineChart.html">TotalLineChart</a></li></ul><h3>Global</h3><ul><li><a href="global.html#draw">draw</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Thu Sep 03 2020 15:08:45 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/story/index.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/story/index.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import "./story.css";
+import CountUp from "react-countup";
+import VisibilitySensor from "react-visibility-sensor";
+import Sankey from "./sankey/sankey.jsx";
+import SLFLineChart from "./slfLineChart.jsx";
+
+/**
+ * The story page, it shows an explanation and breakdown of the student life fee.
+ *
+ * @component
+ * @example
+ * return (
+ *   &lt;Story />
+ * )
+ */
+class Story extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      // budget breakdown
+      fiscal_year: 2020,
+      MT_total: 273302.0,
+      CB_total: 823527.27,
+      Other_total: 400000.0,
+      SLF: 316,
+      total: 1400000,
+      // SLF Trend Data
+      organizations: 39,
+      tuition_inc: 0.007, // %
+      budget_cuts: 25, // %
+      new_clubs: 80,
+      // counting up values on proper position
+      didViewCountUp: false,
+      pHeight: 50,
+      pWidth: 50,
+      particle_speed: 2, // speed of sankey particles
+    };
+  }
+
+  componentDidMount() {
+    this.getData();
+  }
+
+  getData = async () => {
+    const response = await fetch("/api/budget_breakdown");
+    const body = await response.json();
+    if (response.status !== 200) throw Error(body.message);
+    this.setState({
+      fiscal_year: body.budgets[0]["Fiscal Year"],
+      MT_total: body.budgets[0]["Mandatory Transfers Budget"],
+      CB_total: body.budgets[0]["Club Budget"],
+      Other_total: body.budgets[0]["Other"],
+      total: body.budgets[0]["Total"],
+    });
+  };
+
+  // Used to engage number countup when the section is visible
+  onVisibilityChange = (isVisible) => {
+    if (isVisible) {
+      this.setState({ didViewCountUp: true });
+    }
+  };
+
+  render() {
+    return (
+      &lt;div>
+        {/* Intro Section - Contains SLF Summary and Video */}
+
+        &lt;div className="story-intro">
+          &lt;div className="intro-card box border">
+            &lt;div>
+              &lt;h1 className="title">
+                What is the &lt;span className="red">Student Life Fee&lt;/span>?
+              &lt;/h1>
+              &lt;p>
+                Every WPI Student pays a small fee, through their tuition, so
+                that the clubs on campus have funds to be run and mantained. The
+                Student Goverment Association (SGA), handles these funds in
+                order to give each club a budget, as well as to fulfill certain
+                funding requests if they deem the club has an acceptable need.
+              &lt;/p>
+            &lt;/div>
+          &lt;/div>
+          &lt;div className="video">
+            &lt;video width="1000" height="500" controls>
+              &lt;source src="/Videos/fivizvideo.mp4" type="video/mp4">&lt;/source>
+            &lt;/video>
+          &lt;/div>
+        &lt;/div>
+
+        {/* SLF Section - Header */}
+
+        &lt;div className="story-slf slanted light-red-bg">
+          &lt;div className="box border-black margin-slf">
+            &lt;h1 className="title">
+              &lt;span className="red">Raising&lt;/span> the Student Life Fee
+            &lt;/h1>
+            &lt;p>
+              The student life fee increases routinely in order to satisfy to
+              the rapid expansion of WPI's underguate student body and
+              proportionate increase of student clubs and expenses.
+            &lt;/p>
+          &lt;/div>
+
+          {/* SLF Section - Columns */}
+
+          &lt;div className="slf-padding columns">
+            &lt;div className="column">
+              &lt;div className="box border-black max-height align-text">
+                &lt;p>
+                  &lt;span className="red">{this.state.organizations}&lt;/span> more
+                  organizations since 2015{" "}
+                &lt;/p>
+              &lt;/div>
+            &lt;/div>
+            &lt;div className="column">
+              &lt;div className="box border-black max-height align-text">
+                &lt;p>
+                  &lt;span className="red">{this.state.tuition_inc}%&lt;/span>{" "}
+                  increase in tuition from {this.state.fiscal_year - 1}
+                &lt;/p>
+              &lt;/div>
+            &lt;/div>
+            &lt;div className="column">
+              &lt;div className="box border-black max-height align-text">
+                &lt;p>
+                  {" "}
+                  &lt;span className="red">{this.state.budget_cuts}%&lt;/span> of
+                  total budgets had to be cut in {this.state.fiscal_year - 1}{" "}
+                &lt;/p>
+              &lt;/div>
+            &lt;/div>
+            &lt;div className="column">
+              &lt;div className="box border-black max-height align-text">
+                &lt;p>
+                  {" "}
+                  &lt;span className="red">{this.state.new_clubs}&lt;/span> new clubs
+                  since 2010{" "}
+                &lt;/p>
+              &lt;/div>
+            &lt;/div>
+            &lt;div className="column">
+              &lt;div className="box border-black max-height align-text">
+                &lt;p>
+                  {" "}
+                  SLF made &lt;span className="red">{this.state.SLF}&lt;/span> to
+                  account for inflation{" "}
+                &lt;/p>
+              &lt;/div>
+            &lt;/div>
+          &lt;/div>
+
+          {/* SLF Section - LineChart */}
+
+          &lt;div className="box border-black" id="lineChartBox">
+            &lt;SLFLineChart />
+          &lt;/div>
+        &lt;/div>
+
+        {/* Story Budget Breakdown Section - Header */}
+
+        &lt;div className="story-budget-break slanted red-bg">
+          &lt;div className="center">
+            &lt;h1 className="white title">Where Does That Money Go?&lt;/h1>
+            &lt;h1 className="white subtitle is-4">The Budget Breakdown&lt;/h1>
+            &lt;div className="box">
+              &lt;div className="columns">
+                &lt;div className="column">
+                  &lt;h1 className="subtitle is-4 align-text black bold">
+                    Current SLF:{" "}
+                  &lt;/h1>
+                  &lt;h1 className="title red">
+                    &lt;VisibilitySensor
+                      onChange={this.onVisibilityChange}
+                      offset={{
+                        top: 10,
+                      }}
+                      delayedCall
+                    >
+                      &lt;CountUp
+                        end={this.state.didViewCountUp ? this.state.SLF : 0}
+                        duration={1.5}
+                        prefix="$"
+                        decimals={2}
+                        decimal="."
+                        ref={(countUp) => {
+                          this.myCountUp = countUp;
+                        }}
+                      />
+                    &lt;/VisibilitySensor>
+                  &lt;/h1>
+                &lt;/div>
+                &lt;div className="is-divider-vertical">&lt;/div>
+                &lt;div className="column">
+                  &lt;h1 className="subtitle is-4 align-text black bold">
+                    Total SGA Budget:{" "}
+                  &lt;/h1>
+                  &lt;h1 className="title red">
+                    &lt;CountUp
+                      end={this.state.didViewCountUp ? this.state.total : 0}
+                      duration={1.5}
+                      prefix="$"
+                      separator=","
+                      decimals={0}
+                      decimal="."
+                    >&lt;/CountUp>
+                  &lt;/h1>
+                &lt;/div>
+              &lt;/div>
+            &lt;/div>
+          &lt;/div>
+          &lt;br>&lt;/br>
+          &lt;br>&lt;/br>
+
+          {/* Story Budget Breakdown Section - Columns */}
+
+          &lt;div className="columns">
+            &lt;div className="column">
+              &lt;div className="box align-text max-height">
+                &lt;h1 className="subtitle is-3 black">Mandatory Transfers&lt;/h1>
+                &lt;h1 className="subtitle is-4">
+                  &lt;CountUp
+                    className="red"
+                    end={this.state.didViewCountUp ? this.state.MT_total : 0}
+                    duration={1.5}
+                    prefix="$"
+                    separator=","
+                    decimals={2}
+                    decimal="."
+                  >&lt;/CountUp>
+                &lt;/h1>
+                &lt;div>
+                  &lt;p>
+                    Covers a variety of campus services such as Snap, Speakers,
+                    Club Sports, Coaches, and Campus Labs. This budget also
+                    allows sports to get gym credit!
+                  &lt;/p>
+                &lt;/div>
+              &lt;/div>
+            &lt;/div>
+            &lt;div className="column">
+              &lt;div className="box align-text max-height">
+                &lt;h1 className="subtitle is-3 black">Organization Budgets&lt;/h1>
+                &lt;h1 className="subtitle is-4">
+                  &lt;CountUp
+                    className="red"
+                    end={this.state.didViewCountUp ? this.state.CB_total : 0}
+                    duration={1.5}
+                    prefix="$"
+                    separator=","
+                    decimals={2}
+                    decimal="."
+                  >&lt;/CountUp>
+                &lt;/h1>
+                &lt;div>
+                  Organizations, such as clubs, can request an annual budget.
+                  SGA reviews and approves these budgets annually.
+                &lt;/div>
+                &lt;br>&lt;/br>
+              &lt;/div>
+            &lt;/div>
+            &lt;div className="column">
+              &lt;div className="box align-text max-height">
+                &lt;h1 className="subtitle is-3 black">Other&lt;/h1>
+                &lt;h1 className="subtitle is-4">
+                  &lt;CountUp
+                    className="red"
+                    end={this.state.didViewCountUp ? this.state.Other_total : 0}
+                    duration={1.5}
+                    prefix="$"
+                    separator=","
+                    decimals={2}
+                    decimal="."
+                  >&lt;/CountUp>
+                &lt;/h1>
+                &lt;div>
+                  This budget is used for Funding Requests (FR). FRs are meants
+                  to supplement club budgets, or provide funds for organizations
+                  that do not receive an annual budget.
+                &lt;/div>
+              &lt;/div>
+            &lt;/div>
+          &lt;/div>
+        &lt;/div>
+
+        {/* Sankey */}
+
+        &lt;div className="story-slf slanted light-red-bg">
+          &lt;div className="box border-black margin-slf">
+            &lt;h1 className="title">Overall Budget Breakdown&lt;/h1>
+            &lt;p>
+              Using this visualization you can see where your personal $316 goes
+              within the overall budget and see what the different sections of
+              the budget actually are. Hover over the lines to see each amount
+              and click and drag the segements for ease of viewing.
+            &lt;/p>
+          &lt;/div>
+          &lt;br>&lt;/br>
+          &lt;div className="box border-black" id="sankeyBox">
+            &lt;Sankey particle_speed={this.state.particle_speed} />
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    );
+  }
+}
+
+export default Story;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AboutPage.html">AboutPage</a></li><li><a href="App.html">App</a></li><li><a href="BarChart.html">BarChart</a></li><li><a href="BudgetPage.html">BudgetPage</a></li><li><a href="ComponentSwitcher.html">ComponentSwitcher</a></li><li><a href="ExampleSelectChart.html">ExampleSelectChart</a></li><li><a href="Footer.html">Footer</a></li><li><a href="Header.html">Header</a></li><li><a href="LollipopSelect.html">LollipopSelect</a></li><li><a href="RawDataTable.html">RawDataTable</a></li><li><a href="RidgeChart.html">RidgeChart</a></li><li><a href="Sankey.html">Sankey</a></li><li><a href="ScatterPlot.html">ScatterPlot</a></li><li><a href="Select.html">Select</a></li><li><a href="SLFLineChart.html">SLFLineChart</a></li><li><a href="Story.html">Story</a></li><li><a href="SunburstChart.html">SunburstChart</a></li><li><a href="TotalLineChart.html">TotalLineChart</a></li></ul><h3>Global</h3><ul><li><a href="global.html#draw">draw</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Thu Sep 03 2020 15:08:45 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

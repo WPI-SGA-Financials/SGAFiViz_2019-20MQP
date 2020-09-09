@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/multi-select/Select.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/multi-select/Select.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import { Multiselect } from "multiselect-react-dropdown";
+import PropTypes from "prop-types";
+
+/**
+ * Component for showing a multi-select list of options to pass as data to child components.
+ *
+ * @prop {array} options The options for the multi select component to show.
+ * @prop {element} children The child element(s) to have in the Select component to pass the selected options as props to.
+ *
+ * @component
+ * @example
+ * const options = {
+ *    name: "Cyber Security Club",
+ *    category: "Academic",
+ *    budget: "15000",
+ *    active_members: 23,
+ * }
+ * return (
+ *   &lt;Select options={options} />
+ * )
+ */
+class Select extends Component {
+  options = [
+    {
+      name: "Cyber Security Club",
+      category: "Academic",
+      budget: "15000",
+      active_members: 23,
+    },
+    {
+      name: "The Alliance",
+      category: "Awareness",
+      budget: "3550",
+      active_members: 43,
+    },
+    {
+      name: "Colleges Against Cancer",
+      category: "Community Service",
+      budget: "70000",
+      active_members: 75,
+    },
+    {
+      name: "Habitat For Humanity",
+      category: "Community Service",
+      budget: "13505",
+      active_members: 30,
+    },
+    { name: "Hillel", category: "Cultural", budget: "2500" },
+    {
+      name: "Game Development Club",
+      category: "Extracurricular",
+      budget: "300",
+      active_members: 35,
+    },
+  ];
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      selected: [],
+    };
+    this.onSelect = this.onSelect.bind(this);
+    this.onRemove = this.onRemove.bind(this);
+  }
+
+  onSelect(selected) {
+    this.setState({
+      selected: selected,
+    });
+  }
+
+  onRemove(selected) {
+    this.setState({
+      selected: selected,
+    });
+  }
+
+  render() {
+    return (
+      &lt;div className="columns">
+        &lt;div className="column is-one-third">
+          &lt;Multiselect
+            options={this.props.options} // Options to display in the dropdown
+            groupBy="category" // Value to group options by
+            placeholder="Select Club(s)"
+            onSelect={this.onSelect} // Function will trigger on select event
+            onRemove={this.onRemove} // Function will trigger on remove event
+            displayValue="name" // Property name to display in the dropdown options
+            style={{
+              chips: { background: "#9D1212" },
+              searchBox: {
+                background: "white",
+                borderBottom: "1px solid #9D1212",
+                borderRadius: "0px",
+                // "border": "none",
+              },
+            }}
+          />
+        &lt;/div>
+        &lt;div className="column">
+          {React.cloneElement(this.props.children, {
+            selected: this.state.selected,
+          })}
+        &lt;/div>
+      &lt;/div>
+    );
+  }
+}
+
+Select.propTypes = {
+  /**
+   * The options for the multi select component to show.
+   */
+  options: PropTypes.array.isRequired,
+
+  /**
+   * The child element(s) to have in the Select component to pass the selected options as props to.
+   */
+  children: PropTypes.element.isRequired,
+};
+
+export default Select;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AboutPage.html">AboutPage</a></li><li><a href="App.html">App</a></li><li><a href="BarChart.html">BarChart</a></li><li><a href="BudgetPage.html">BudgetPage</a></li><li><a href="ComponentSwitcher.html">ComponentSwitcher</a></li><li><a href="ExampleSelectChart.html">ExampleSelectChart</a></li><li><a href="Footer.html">Footer</a></li><li><a href="Header.html">Header</a></li><li><a href="LollipopSelect.html">LollipopSelect</a></li><li><a href="RawDataTable.html">RawDataTable</a></li><li><a href="RidgeChart.html">RidgeChart</a></li><li><a href="Sankey.html">Sankey</a></li><li><a href="ScatterPlot.html">ScatterPlot</a></li><li><a href="Select.html">Select</a></li><li><a href="SLFLineChart.html">SLFLineChart</a></li><li><a href="Story.html">Story</a></li><li><a href="SunburstChart.html">SunburstChart</a></li><li><a href="TotalLineChart.html">TotalLineChart</a></li></ul><h3>Global</h3><ul><li><a href="global.html#draw">draw</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Thu Sep 03 2020 15:08:45 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

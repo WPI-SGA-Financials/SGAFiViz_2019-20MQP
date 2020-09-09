@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/budget/ridge.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/budget/ridge.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as d3 from "d3";
+
+/**
+ * D3 code for creating the ridgechart
+ *
+ * @prop {int} width desired width (currently passed through as this.getWidth())
+ * @prop {int} height desired height (currently passed through as this.getHeight())
+ * 
+ * @example
+ * return (
+ *    draw({ width: 700, height: 350 });
+ * )
+ */
+const draw = (props) => {
+  d3.select(".ridge > *").remove();
+  var categories = new Set();
+  var data = {};
+  
+  var margin = { top: 80, right: 80, bottom: 50, left: 110 },
+    width = props.width - margin.left - margin.right, //460
+    height = props.height - margin.top - margin.bottom; //400
+
+  // Code for Ridgeline chart adapted from: https://www.d3-graph-gallery.com/graph/ridgeline_basic.html
+  const svg = d3
+    .select(".ridge")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  fetch("/api/category_organization_numbers")
+    .then((res) => res.json())
+    .then(
+      (result) => {
+        var b = result.members;
+        var i = 0;
+        for (i = 0; i &lt; b.length; i++) {
+          var cat = b[i].Category;
+          categories.add(cat);
+          if (data[cat]) {
+            data[cat].push(b[i]["Active Members"]);
+          } else {
+            data[cat] = [];
+            data[cat].push(b[i]["Active Members"]);
+          }
+        }
+        categories = Array.from(categories);
+        var n = categories.length;
+        var max = 0;
+        for (const key in data) {
+          if (data.hasOwnProperty(key)) {
+            const values = data[key];
+            var lm = Math.max(...values);
+            max = lm > max ? lm : max;
+          }
+        }
+
+        // x axis title
+        svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("x", width/2 + margin.left - 40)
+        .attr("y", height + margin.bottom)
+        .attr('font-family', "Bebas Neue")
+        .attr("font-size", "18px")
+        .text("Number of Active Members");
+
+        var x = d3.scaleLinear().domain([0, max]).range([0, width]);
+        svg
+          .append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x));
+
+        var y = d3.scaleLinear().domain([0, 0.4]).range([height, 0]);
+
+        var yName = d3
+          .scaleBand()
+          .domain(categories)
+          .range([0, height])
+          .paddingInner(1);
+        svg.append("g").call(d3.axisLeft(yName));
+
+        var kde = kernelDensityEstimator(kernelEpanechnikov(7), x.ticks(40));
+        var allDensity = [];
+        for (let i = 0; i &lt; n; i++) {
+          var key = categories[i];
+          var density = kde(data[key]);
+          density.unshift([0, 0]);
+          density.push([max, 0]);
+          allDensity.push({ key: key, density: density });
+        }
+
+        svg
+          .selectAll("areas")
+          .data(allDensity)
+          .enter()
+          .append("path")
+          .attr("transform", function (d) {
+            return "translate(0," + (yName(d.key) - height) + ")";
+          })
+          .datum(function (d) {
+            return d.density;
+          })
+          .attr("fill", "#9d1212")
+          .attr("stroke", "#000")
+          .attr("stroke-width", 1)
+          .attr(
+            "d",
+            d3
+              .line()
+              .curve(d3.curveBasis)
+              .x(function (d) {
+                return x(d[0]);
+              })
+              .y(function (d) {
+                return y(d[1]);
+              })
+          );
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+
+  function kernelDensityEstimator(kernel, X) {
+    return function (V) {
+      return X.map(function (x) {
+        return [
+          x,
+          d3.mean(V, function (v) {
+            return kernel(x - v);
+          }),
+        ];
+      });
+    };
+  }
+  function kernelEpanechnikov(k) {
+    return function (v) {
+      return Math.abs((v /= k)) &lt;= 1 ? (0.75 * (1 - v * v)) / k : 0;
+    };
+  }
+};
+export default draw;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AboutPage.html">AboutPage</a></li><li><a href="App.html">App</a></li><li><a href="BarChart.html">BarChart</a></li><li><a href="BudgetPage.html">BudgetPage</a></li><li><a href="ComponentSwitcher.html">ComponentSwitcher</a></li><li><a href="ExampleSelectChart.html">ExampleSelectChart</a></li><li><a href="Footer.html">Footer</a></li><li><a href="Header.html">Header</a></li><li><a href="LollipopSelect.html">LollipopSelect</a></li><li><a href="RawDataTable.html">RawDataTable</a></li><li><a href="RidgeChart.html">RidgeChart</a></li><li><a href="Sankey.html">Sankey</a></li><li><a href="ScatterPlot.html">ScatterPlot</a></li><li><a href="Select.html">Select</a></li><li><a href="SLFLineChart.html">SLFLineChart</a></li><li><a href="Story.html">Story</a></li><li><a href="SunburstChart.html">SunburstChart</a></li><li><a href="TotalLineChart.html">TotalLineChart</a></li></ul><h3>Global</h3><ul><li><a href="global.html#draw">draw</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Thu Sep 03 2020 15:08:45 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
